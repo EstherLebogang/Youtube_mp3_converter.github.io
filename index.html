@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YouTube to MP3 Converter</title>
+
+  <!-- Font Awesome for the headphones icon -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #000518;
+      color: #001561;
+      line-height: 1.6;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    h1 {
+      color: #000518;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .container {
+      background-color: #f5f5dc;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.3s;
+    }
+
+    .logo-icon {
+      font-size: 3rem;
+      color: #000518;
+      display: block;
+      text-align: center;
+      margin-bottom: 10px;
+      animation: bounce 2s infinite ease-in-out;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #000518;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: bold;
+      transition: background-color 0.3s;
+      width: 100%;
+    }
+
+    button:hover {
+      background-color: #cc0000;
+    }
+
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .loader {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #ff0000;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+      display: none;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .result {
+      margin-top: 30px;
+      padding: 20px;
+      border-radius: 4px;
+      display: none;
+    }
+
+    .success {
+      background-color: #e8f5e9;
+      border: 1px solid #a5d6a7;
+    }
+
+    .error {
+      background-color: #ffebee;
+      border: 1px solid #ef9a9a;
+    }
+
+    .download-link {
+      display: inline-block;
+      margin-top: 15px;
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+
+    .download-link:hover {
+      background-color: #45a049;
+    }
+
+    .instructions {
+      margin-top: 30px;
+      background-color: #f5f5f5;
+      padding: 15px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .instructions h3 {
+      margin-top: 0;
+    }
+
+    .disclaimer {
+      margin-top: 30px;
+      font-size: 12px;
+      color: #666;
+      text-align: center;
+    }
+
+    /* Dark Mode Styles */
+    body.dark-mode {
+      background-color: #111;
+      color: #eee;
+    }
+
+    body.dark-mode .container {
+      background-color: #1e1e1e;
+    }
+
+    body.dark-mode h1,
+    body.dark-mode .logo-icon {
+      color: #eee;
+    }
+
+    body.dark-mode #theme-toggle {
+      border-color: #eee;
+      color: #eee;
+    }
+
+    body.dark-mode .instructions {
+      background-color: #2c2c2c;
+    }
+
+    body.dark-mode .download-link {
+      background-color: #388e3c;
+    }
+
+    body.dark-mode .download-link:hover {
+      background-color: #2e7d32;
+    }
+
+    #theme-toggle {
+      background-color: transparent;
+      border: 2px solid #000518;
+      color: #000518;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 0 auto 20px;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <main class="container" aria-label="YouTube to MP3 Conversion Tool">
+    
+    <!-- Logo Icon -->
+    <i class="fas fa-headphones logo-icon" aria-hidden="true"></i>
+
+    <!-- Title -->
+    <h1>YouTube to MP3 Converter</h1>
+
+    <!-- Theme toggle button -->
+    <button id="theme-toggle">Toggle Light/Dark Mode</button>
+
+    <!-- Form -->
+    <form id="converter-form" novalidate>
+      <div class="form-group">
+        <label for="youtube-url">Enter YouTube URL:</label>
+        <input type="text" id="youtube-url" placeholder="https://www.youtube.com/watch?v=..." aria-required="true" />
+      </div>
+      <button type="submit" id="convert-btn">Convert to MP3</button>
+    </form>
+
+    <!-- Loader -->
+    <div class="loader" id="loader" role="status" aria-hidden="true"></div>
+
+    <!-- Result -->
+    <div class="result" id="result" aria-live="polite"></div>
+
+    <!-- Instructions -->
+    <section class="instructions">
+      <h3>How to use:</h3>
+      <ol>
+        <li>Copy a YouTube video URL (e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ)</li>
+        <li>Paste the URL in the input field above</li>
+        <li>Click the "Convert to MP3" button</li>
+        <li>Wait for the conversion to complete</li>
+        <li>Download your MP3 file</li>
+      </ol>
+    </section>
+
+    <!-- Disclaimer -->
+    <footer class="disclaimer">
+      <p>Note: This tool is for personal use only. Please respect copyright laws and YouTube's Terms of Service.</p>
+    </footer>
+  </main>
+
+  <!-- JavaScript -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('converter-form');
+      const urlInput = document.getElementById('youtube-url');
+      const convertBtn = document.getElementById('convert-btn');
+      const loader = document.getElementById('loader');
+      const result = document.getElementById('result');
+      const themeToggle = document.getElementById('theme-toggle');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const youtubeUrl = urlInput.value.trim();
+
+        if (!youtubeUrl) return displayMessage('Please enter a YouTube URL', false);
+        if (!isValidYoutubeUrl(youtubeUrl)) return displayMessage('Please enter a valid YouTube URL', false);
+
+        toggleLoading(true);
+        result.style.display = 'none';
+
+        try {
+          await simulateConversion();
+          const videoId = extractVideoId(youtubeUrl);
+          const videoTitle = await fetchVideoTitle(videoId);
+          displayMessage(`Conversion Successful!<br><strong>Title:</strong> ${videoTitle}<br><a href="#" class="download-link" onclick="alert('Demo only. No actual download.'); return false;">Download MP3</a>`, true);
+        } catch (err) {
+          displayMessage('Conversion failed: ' + err.message, false);
+        } finally {
+          toggleLoading(false);
+        }
+      });
+
+      themeToggle.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+      });
+
+      function isValidYoutubeUrl(url) {
+        return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+/.test(url);
+      }
+
+      function extractVideoId(url) {
+        const match = url.match(/^.*(?:youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#&?]*).*/);
+        return (match && match[1].length === 11) ? match[1] : null;
+      }
+
+      async function fetchVideoTitle(videoId) {
+        return 'Sample YouTube Video'; // Placeholder
+      }
+
+      async function simulateConversion() {
+        return new Promise(resolve => setTimeout(resolve, 2000));
+      }
+
+      function toggleLoading(show) {
+        loader.style.display = show ? 'block' : 'none';
+        convertBtn.disabled = show;
+      }
+
+      function displayMessage(message, isSuccess) {
+        result.className = `result ${isSuccess ? 'success' : 'error'}`;
+        result.innerHTML = `<p>${message}</p>`;
+        result.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>
