@@ -46,7 +46,7 @@
         result.innerHTML = "";
 
         try {
-          const response = await fetch("https://yt-mp3-lebogang.onrender.com/api/download/mp3", {
+          const response = await fetch("https://yt-mp3-lebogang2.onrender.com/api/download/mp3", {
 
             method: "POST",
             headers: { "Content-Type": "application/json" },
