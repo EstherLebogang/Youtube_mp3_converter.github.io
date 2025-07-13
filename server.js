@@ -1,66 +1,74 @@
 // server.js
 const express = require("express");
 const cors = require("cors");
-const path = require("path");
 const fs = require("fs");
+const { exec } = require("child_process");
 const { v4: uuidv4 } = require("uuid");
-const youtubedl = require("youtube-dl-exec"); // Use cross-platform yt-dlp wrapper
+const path = require("path");
+
+// Use Linux system installed ffmpeg and yt-dlp
+const ffmpegPath = "ffmpeg";
+const ytDlpPath = "yt-dlp";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
 
-const DOWNLOAD_FOLDER = path.join(__dirname, "public", "downloads");
+const DOWNLOAD_FOLDER = path.join(__dirname, "public");
 
-// Ensure downloads folder exists
-if (!fs.existsSync(DOWNLOAD_FOLDER)) {
-  fs.mkdirSync(DOWNLOAD_FOLDER, { recursive: true });
+function runYtDlp(url, format) {
+  const id = uuidv4();
+  const output = path.join(DOWNLOAD_FOLDER, `${id}.${format}`);
+
+  const command = `${ytDlpPath} "${url}" -x --audio-format ${format} -o "${output}" --ffmpeg-location ${ffmpegPath}`;
+
+  return new Promise((resolve, reject) => {
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        console.error("Exec error:", error);
+        console.error("stderr:", stderr);
+        return reject(stderr || error.message);
+      }
+      console.log("stdout:", stdout);
+      resolve(`/${path.basename(output)}`);
+    });
+  });
 }
 
-// Download MP3
 app.post("/api/download/mp3", async (req, res) => {
   const { url } = req.body;
-  const filename = `audio-${uuidv4()}.mp3`;
-  const outputPath = path.join(DOWNLOAD_FOLDER, filename);
-
   try {
-    await youtubedl(url, {
-      output: outputPath,
-      extractAudio: true,
-      audioFormat: "mp3",
-    });
-
-    res.json({ file: `/downloads/${filename}` });
+    const file = await runYtDlp(url, "mp3");
+    res.json({ file });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to convert to MP3: " + err.message });
+    res.status(500).json({ error: "Failed to convert to MP3: " + err });
   }
 });
 
-// Download MP4
 app.post("/api/download/mp4", async (req, res) => {
   const { url } = req.body;
-  const filename = `video-${uuidv4()}.mp4`;
-  const outputPath = path.join(DOWNLOAD_FOLDER, filename);
-
   try {
-    await youtubedl(url, {
-      output: outputPath,
-      format: "bestvideo+bestaudio",
-      mergeOutputFormat: "mp4"
-    });
+    const id = uuidv4();
+    const output = path.join(DOWNLOAD_FOLDER, `${id}.mp4`);
+    const command = `${ytDlpPath} "${url}" -f bestvideo+bestaudio --merge-output-format mp4 -o "${output}" --ffmpeg-location ${ffmpegPath}`;
 
-    res.json({ file: `/downloads/${filename}` });
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        console.error("Exec error:", error);
+        console.error("stderr:", stderr);
+        return res.status(500).json({ error: stderr || error.message });
+      }
+      console.log("stdout:", stdout);
+      res.json({ file: `/${path.basename(output)}` });
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to convert to MP4: " + err.message });
+    res.status(500).json({ error: "Failed to convert to MP4: " + err });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`✅ Server running on http://localhost:${PORT}`);
 });
